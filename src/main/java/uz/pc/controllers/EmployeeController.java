@@ -45,6 +45,8 @@ public class EmployeeController {
 
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     public ResponseEntity<String> save(@Valid @RequestBody Employee employee) {
+        System.out.println(employee.getCardId());
+        System.out.println(employee.isCardDisabled());
         boolean response = dao.saveEmployee(employee);
         if (!response) return new ResponseEntity<>("This id has saved already!!!", HttpStatus.OK);
         return new ResponseEntity<>("Saved", HttpStatus.OK);
@@ -52,8 +54,10 @@ public class EmployeeController {
 
     @RequestMapping(value = "/edit", method = RequestMethod.POST)
     public ResponseEntity<String> edit(@Valid @RequestBody Employee employee) {
-        boolean response = dao.editEmployee(employee);
-        if (!response) return new ResponseEntity<>("This id has saved already!!!", HttpStatus.OK);
+        System.out.println(employee.getCardId());
+        System.out.println(employee.isCardDisabled());
+        boolean response = dao.saveEmployee(employee);
+        if (!response) return new ResponseEntity<>("This id has saved already!", HttpStatus.OK);
         return new ResponseEntity<>("Saved", HttpStatus.OK);
     }
 

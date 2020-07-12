@@ -1,4 +1,4 @@
-var app = angular.module('productionEmpControl', []);
+let app = angular.module('productionEmpControl', []);
 app.controller('EmployeeController', function ($scope, $window, $http, sharedParam, $rootScope) {
     $scope.employees = [];
 
@@ -29,6 +29,8 @@ app.controller('EmployeeController', function ($scope, $window, $http, sharedPar
 
 app.controller('EmployeeModalController', function ($scope, $window, $http, sharedParam, $rootScope) {
 
+    var temporaryCardID = "";
+
     $rootScope.$on('siblingAndParent', function(event, data) {
 
         $http({
@@ -42,6 +44,7 @@ app.controller('EmployeeModalController', function ($scope, $window, $http, shar
             method: "GET",
             url: "/employees/get/" + sharedParam.getId()
         }).then(function (response) {
+
             $scope.employee = response.data;
         });
     });
@@ -53,7 +56,6 @@ app.controller('EmployeeModalController', function ($scope, $window, $http, shar
             data: $scope.employee
         }).then(function (response) {
             console.log(response.data);
-            // alert(response.data);
             $window.location.reload();
         });
     };
@@ -65,7 +67,6 @@ app.controller('EmployeeModalController', function ($scope, $window, $http, shar
             url: "/employees/save",
             data: $scope.employee
         }).then(function (response) {
-            // alert(response.data);
             $window.location.reload();
         });
     };
@@ -73,6 +74,15 @@ app.controller('EmployeeModalController', function ($scope, $window, $http, shar
     $scope.printVal = function () {
         $scope.item = $scope.employee.experience;
     };
+
+    $scope.disableCardInput = function () {
+        if (!$scope.employee.cardDisabled) {
+            temporaryCardID = $scope.employee.cardId;
+            $scope.employee.cardId = "Card ID is not assigned";
+        } else {
+            $scope.employee.cardId = temporaryCardID;
+        }
+    }
 
 });
 

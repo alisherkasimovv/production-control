@@ -19,14 +19,15 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class EmployeeDAOImpl implements EmployeeDAO {
 
-    private EmployeeRepository repository;
+    private final EmployeeRepository repository;
     private EntityManager em;
 
-    private Logger logger = LoggerFactory.getLogger(EmployeeDAOImpl.class);
+    private final Logger logger = LoggerFactory.getLogger(EmployeeDAOImpl.class);
 
     @Autowired
     public EmployeeDAOImpl(EmployeeRepository repository) {
@@ -97,12 +98,22 @@ public class EmployeeDAOImpl implements EmployeeDAO {
 
     @Override
     public boolean saveEmployee(Employee employee) {
-        try {
-            repository.save(employee);
-        } catch (DataIntegrityViolationException ex) {
-            return false;
-        }
+        Employee temp = repository.findById(employee.getId());
 
+        if (temp != null) {
+            temp = employee;
+            if (employee.isCardDisabled()) {
+                temp.setCardId(UUID.randomUUID().toString());
+            }
+
+            repository.save(temp);
+        } else {
+            if (employee.isCardDisabled()) {
+                employee.setCardId(UUID.randomUUID().toString());
+            }
+
+            repository.save(employee);
+        }
         return true;
     }
 

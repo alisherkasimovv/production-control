@@ -1,5 +1,7 @@
 package uz.pc.controllers;
 
+import javassist.bytecode.ByteArray;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +24,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @RestController
+@Slf4j
 @RequestMapping("/salaries")
 @CrossOrigin("http://localhost:3000")
 public class SalariesController {
@@ -44,57 +47,35 @@ public class SalariesController {
 
         xls.createXls(true);
 
-        File file2Upload = new File("segmented.xlsx");
-        Path path = Paths.get(file2Upload.getAbsolutePath());
-
-        ByteArrayResource res = null;
         try {
-            res = new ByteArrayResource(Files.readAllBytes(path));
-        } catch (IOException e) {
-            e.printStackTrace();
+            HttpHeaders header = new HttpHeaders();
+            header.setContentType(new MediaType("application", "force-download"));
+            header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ProductTemplate.xlsx");
+            return new ResponseEntity<>(new ByteArrayResource(Files.readAllBytes(Paths.get("segmented.xlsx"))),
+                    header, HttpStatus.CREATED);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        HttpHeaders header = new HttpHeaders();
-        header.setContentType(MediaType.valueOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=segmented.xlsx");
-        System.out.println("reached");
-        System.out.println(res);
-        return new ResponseEntity<>(res,
-                header, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/save-overall", method = RequestMethod.POST)
-    public ResponseEntity<InputStreamResource> saveOverallToFile(@Valid @RequestBody Filter filter) throws IOException {
+    public ResponseEntity<ByteArrayResource> saveOverallToFile(@Valid @RequestBody Filter filter) throws Exception {
         List<SalariesDTO> collection = dao.getSalariesInformation(filter);
         XLSHandlerService xls = new XLSHandlerService(collection, filter.getStart(), filter.getEnd());
 
         xls.createXls(false);
 
-        FileOutputStream fos = new FileOutputStream("compressed-overall.zip");
-        ZipOutputStream zipOut = new ZipOutputStream(fos);
-        File fileToZip = new File("overall.xlsx");
-        FileInputStream fis = new FileInputStream(fileToZip);
-        ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
-        zipOut.putNextEntry(zipEntry);
-        byte[] bytes = new byte[1024];
-        int length;
-        while((length = fis.read(bytes)) >= 0) {
-            zipOut.write(bytes, 0, length);
+        try {
+            HttpHeaders header = new HttpHeaders();
+            header.setContentType(new MediaType("application", "vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ProductTemplate.xlsx");
+            return new ResponseEntity<>(new ByteArrayResource(Files.readAllBytes(Paths.get("overall.xlsx"))),
+                    header, HttpStatus.CREATED);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        zipOut.close();
-        fis.close();
-        fos.close();
-
-        File file2Upload = new File("compressed-overall.zip");
-        InputStreamResource resource = new InputStreamResource(new FileInputStream(file2Upload));
-
-        HttpHeaders header = new HttpHeaders();
-        header.setContentType(MediaType.valueOf("application/zip"));
-        header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=compressed-overall.zip");
-
-        return ResponseEntity.ok()
-                .headers(header)
-                .body(resource);
     }
 
 }

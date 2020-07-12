@@ -38,4 +38,8 @@ public class Employee extends UpdateBaseEntity {
     @Column(name = "card_id", unique = true)
     private String cardId;
 
+    @Nullable
+    @Column(name = "is_card_disabled")
+    private boolean cardDisabled = false;
+
 }
